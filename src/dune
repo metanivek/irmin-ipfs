@@ -1,0 +1,4 @@
+(library
+ (name irmin_ipfs)
+ (public_name irmin-ipfs)
+ (libraries irmin unix))

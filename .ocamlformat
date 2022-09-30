@@ -1,0 +1,5 @@
+profile = default
+version = 0.24.1
+
+break-infix = fit-or-vertical
+parse-docstrings = true
