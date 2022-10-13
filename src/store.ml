@@ -52,28 +52,28 @@ functor
 
     (** Internal map handling *)
 
-    let print_map prefix m =
-      Format.fprintf Format.std_formatter "map %s : %a\n" prefix
-        Irmin.Type.(pp m_ty)
-        m
-
     let update_map t f =
       load t;
       (* FIXME [load t] is a hack to make sure all storages
          are using updated values *)
-      print_map "before" t.m;
       t.m <- f t.m;
-      print_map "after" t.m;
       save t;
       publish t
 
     (** Initialisation / Closing *)
 
     let v config =
-      let name = Irmin.Backend.Conf.get config Conf.name in
+      Printf.printf "--- Store.v BEGIN ---\n";
+      let name = Irmin.Backend.Conf.get config Conf.Key.name in
+      let fresh = Irmin.Backend.Conf.get config Conf.Key.fresh in
       let ipns_key = Ipns.create name in
       let t = { ipns_key; m = M.empty; hash = None } in
-      load t;
+      (match fresh with
+      | true ->
+          save t;
+          publish t
+      | false -> load t);
+      Printf.printf "--- Store.v END ---\n\n";
       t |> Lwt.return
 
     let close _t = Lwt.return_unit
@@ -120,9 +120,9 @@ functor
     let base_v = v
 
     let v config =
-      let base_name = Irmin.Backend.Conf.get config Conf.name in
+      let base_name = Irmin.Backend.Conf.get config Conf.Key.name in
       let name = base_name ^ "/branches" in
-      let config = Irmin.Backend.Conf.add config Conf.name name in
+      let config = Irmin.Backend.Conf.add config Conf.Key.name name in
       base_v config
   end
 
@@ -137,9 +137,9 @@ functor
     let base_v = v
 
     let v config =
-      let base_name = Irmin.Backend.Conf.get config Conf.name in
+      let base_name = Irmin.Backend.Conf.get config Conf.Key.name in
       let name = base_name ^ "/objects" in
-      let config = Irmin.Backend.Conf.add config Conf.name name in
+      let config = Irmin.Backend.Conf.add config Conf.Key.name name in
       base_v config
   end
 
