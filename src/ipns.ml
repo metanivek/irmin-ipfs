@@ -13,13 +13,12 @@ end
 
 let keys () =
   let cmd = "ipfs key list -l" in
-  let ic = Unix.open_process_in cmd in
-  let rec loop acc =
-    match In_channel.input_line ic with
-    | None -> acc
-    | Some s -> Key.of_string s :: acc |> loop
+  let k, _ =
+    Cmd.run cmd
+      ~on_stdout:([], fun acc s -> Key.of_string s :: acc)
+      ~on_stderr:Cmd.On_output.print
   in
-  loop []
+  k
 
 let key name = keys () |> List.find_opt (fun k -> name = Key.name k)
 
@@ -28,25 +27,34 @@ let create name =
   | Some key -> key
   | None -> (
       let cmd = "ipfs key gen " ^ name in
-      let ic, _, _ = Unix.open_process_full cmd (Unix.environment ()) in
-      match In_channel.input_line ic with
+      let key, _ =
+        Cmd.run cmd
+          ~on_stdout:(None, fun _ hash -> Some (Key.v hash name))
+          ~on_stderr:Cmd.On_output.print
+      in
+      match key with
       | None -> assert false (* unexpected error occurred *)
-      | Some hash -> Key.v hash name)
+      | Some key -> key)
 
 let resolve key =
   let hash = Key.hash key in
   let cmd = "ipfs name resolve " ^ hash in
-  let ic, _, _ = Unix.open_process_full cmd (Unix.environment ()) in
-  match In_channel.input_line ic with
-  | None -> None
-  | Some s -> (
-      let split = String.split_on_char '/' s in
-      assert (List.length split = 3);
-      (* /ipfs/CID *)
-      match List.nth split 1 with
-      | "ipfs" -> Some (List.nth split 2)
-      | "ipns" -> assert false (* we should never point keys to ipns entries *)
-      | _ -> None)
+  let hash, _ =
+    Cmd.run cmd
+      ~on_stdout:
+        ( None,
+          fun _ s ->
+            let split = String.split_on_char '/' s in
+            assert (List.length split = 3);
+            (* /ipfs/CID *)
+            match List.nth split 1 with
+            | "ipfs" -> Some (List.nth split 2)
+            | "ipns" ->
+                assert false (* we should never point keys to ipns entries *)
+            | _ -> None )
+      ~on_stderr:Cmd.On_output.print
+  in
+  hash
 
 let publish key hash =
   (* painfully slow without --offline.
@@ -59,5 +67,4 @@ let publish key hash =
     ^ " "
     ^ hash
   in
-  let _, _, _ = Unix.open_process_full cmd (Unix.environment ()) in
-  ()
+  Cmd.run_default cmd
