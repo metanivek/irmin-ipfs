@@ -35,7 +35,7 @@ functor
       match t.hash with None -> () | Some h -> Ipns.publish t.ipns_key h
 
     let save t =
-      let encode = Irmin.Type.(unstage (to_bin_string m_ty)) in
+      let encode = Irmin.Type.(to_json_string m_ty) in
       let r = encode t.m in
       let hash = Ipfs.write r in
       t.hash <- Some hash
@@ -43,7 +43,7 @@ functor
     let load t =
       let hash = Ipns.resolve t.ipns_key in
       t.hash <- hash;
-      let decode = Irmin.Type.(unstage (of_bin_string m_ty)) in
+      let decode = Irmin.Type.(of_json_string m_ty) in
       match t.hash with
       | None -> ()
       | Some hash -> (
