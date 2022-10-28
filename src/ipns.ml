@@ -20,10 +20,10 @@ let keys () =
   in
   k
 
-let key name = keys () |> List.find_opt (fun k -> name = Key.name k)
+let lookup name = keys () |> List.find_opt (fun k -> name = Key.name k)
 
 let create name =
-  match key name with
+  match lookup name with
   | Some key -> key
   | None -> (
       let cmd = "ipfs key gen " ^ name in

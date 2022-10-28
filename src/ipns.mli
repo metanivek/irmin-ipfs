@@ -13,3 +13,6 @@ val resolve : Key.t -> Ipfs.hash option
 
 val publish : Key.t -> Ipfs.hash -> unit
 (** [publish key hash] updates IPNS to point [key] to [hash] *)
+
+val lookup : string -> Key.t option
+(** [lookup name] looks up a local key with the give name. *)
