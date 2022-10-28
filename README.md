@@ -1,3 +1,3 @@
 experimenting with irmin + ipfs
 
-🚧 🐉 status: mostly broken and slow and of an uncertain future 🐉 🚧
+🚧 🐉 status: functional but very much a work in progress 🐉 🚧
