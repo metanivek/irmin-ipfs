@@ -8,5 +8,7 @@ end
 let empty = Irmin.Backend.Conf.empty spec
 
 let v ?(fresh = false) repo_name =
-  let config = Irmin.Backend.Conf.add empty Key.name ("irmin-ipfs/" ^ repo_name) in
+  let config =
+    Irmin.Backend.Conf.add empty Key.name ("irmin-ipfs/" ^ repo_name)
+  in
   Irmin.Backend.Conf.add config Key.fresh fresh
